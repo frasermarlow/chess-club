@@ -4,17 +4,26 @@ const db = firebase.firestore();
 const auth = firebase.auth();
 const googleProvider = new firebase.auth.GoogleAuthProvider();
 
-const DEFAULT_LEAGUES = [
-    { name: "Lord of the Rings", players: ["Player 1", "Player 2", "Player 3", "Player 4", "Player 5"] },
-    { name: "League B", players: ["Player 6", "Player 7", "Player 8", "Player 9", "Player 10"] },
-    { name: "League C", players: ["Player 11", "Player 12", "Player 13", "Player 14", "Player 15"] },
-    { name: "League D", players: ["Player 16", "Player 17", "Player 18", "Player 19", "Player 20"] }
-];
+const DEFAULT_PLAYERS_PER_GROUP = 4;
+
+const DEFAULT_LEAGUE_NAMES = ["Lord of the Rings", "League B", "League C", "League D"];
+
+function buildDefaultLeagues(playersPerGroup) {
+    const n = playersPerGroup || DEFAULT_PLAYERS_PER_GROUP;
+    return DEFAULT_LEAGUE_NAMES.map((name, li) => {
+        const players = [];
+        for (let i = 0; i < n; i++) {
+            players.push("Player " + (li * n + i + 1));
+        }
+        return { name, players };
+    });
+}
 
 // --- App State ---
 
 let leagues = [];   // Array of { id, name, players }
 let matches = [];   // Array of { id, leagueId, player1, player2, winner, date }
+let playersPerGroup = DEFAULT_PLAYERS_PER_GROUP;
 let isAdmin = false;
 let currentUser = null;
 
@@ -57,36 +66,46 @@ function updateAdminUI() {
 
     // If user was on an admin-only view but lost admin status, go back to standings
     const activeView = document.querySelector(".nav-btn.active");
-    if (activeView && activeView.classList.contains("admin-only") && !isAdmin) {
+    const adminBtnActive = document.getElementById("admin-btn").classList.contains("active");
+    if (!isAdmin && (adminBtnActive || (activeView && activeView.classList.contains("admin-only")))) {
         switchView("standings");
     }
 }
 
 // --- Navigation ---
 
+let currentView = "standings";
+
 function switchView(viewName) {
+    currentView = viewName;
     document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
-    const btn = document.querySelector(`.nav-btn[data-view="${viewName}"]`);
-    if (btn) btn.classList.add("active");
+    document.getElementById("admin-btn").classList.remove("active");
+    if (viewName === "admin") {
+        document.getElementById("admin-btn").classList.add("active");
+    } else {
+        const btn = document.querySelector(`.nav-btn[data-view="${viewName}"]`);
+        if (btn) btn.classList.add("active");
+    }
     document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
     document.getElementById(viewName + "-view").classList.add("active");
     renderCurrentView();
 }
 
 function renderCurrentView() {
-    const activeBtn = document.querySelector(".nav-btn.active");
-    if (!activeBtn) return;
-    const view = activeBtn.dataset.view;
-    if (view === "standings") renderStandings();
-    if (view === "record") initRecordForm();
-    if (view === "history") renderHistory();
-    if (view === "settings") renderSettings();
+    if (currentView === "standings") renderStandings();
+    if (currentView === "record") initRecordForm();
+    if (currentView === "history") renderHistory();
+    if (currentView === "admin") renderAdmin();
 }
 
 document.querySelectorAll(".nav-btn").forEach(btn => {
     btn.addEventListener("click", () => {
         switchView(btn.dataset.view);
     });
+});
+
+document.getElementById("admin-btn").addEventListener("click", () => {
+    switchView("admin");
 });
 
 // --- Firestore Real-time Listeners ---
@@ -96,13 +115,24 @@ function leagueIdFromIndex(idx) {
 }
 
 async function seedDefaultLeagues() {
+    const defaults = buildDefaultLeagues(playersPerGroup);
     const batch = db.batch();
-    DEFAULT_LEAGUES.forEach((league, i) => {
+    defaults.forEach((league, i) => {
         const ref = db.collection("leagues").doc(leagueIdFromIndex(i));
         batch.set(ref, { name: league.name, players: league.players });
     });
     await batch.commit();
 }
+
+// Listen to settings
+db.collection("settings").doc("general").onSnapshot((doc) => {
+    if (doc.exists) {
+        playersPerGroup = doc.data().playersPerGroup || DEFAULT_PLAYERS_PER_GROUP;
+    } else {
+        playersPerGroup = DEFAULT_PLAYERS_PER_GROUP;
+    }
+    renderCurrentView();
+});
 
 // Listen to leagues collection
 db.collection("leagues").orderBy(firebase.firestore.FieldPath.documentId())
@@ -143,7 +173,9 @@ function computeStandings(league) {
         name,
         played: 0,
         wins: 0,
+        draws: 0,
         losses: 0,
+        forfeits: 0,
         points: 0
     }));
 
@@ -155,13 +187,24 @@ function computeStandings(league) {
         p1.played++;
         p2.played++;
 
-        if (match.winner === match.player1) {
-            p1.wins++;
+        if (match.winner === "draw") {
+            p1.draws++;
+            p2.draws++;
             p1.points += 1;
+            p2.points += 1;
+        } else if (typeof match.winner === "string" && match.winner.startsWith("forfeit-")) {
+            const forfeitIdx = parseInt(match.winner.split("-")[1]);
+            const forfeiter = forfeitIdx === match.player1 ? p1 : p2;
+            forfeiter.forfeits++;
+            forfeiter.losses++;
+            forfeiter.points -= 1;
+        } else if (match.winner === match.player1) {
+            p1.wins++;
+            p1.points += 3;
             p2.losses++;
         } else if (match.winner === match.player2) {
             p2.wins++;
-            p2.points += 1;
+            p2.points += 3;
             p1.losses++;
         }
     });
@@ -188,14 +231,16 @@ function renderStandings() {
 
         let rows = standings.map((p, i) => {
             const rank = i + 1;
-            let rankClass = rank <= 3 ? ` rank-${rank}` : "";
+            let rankClass = rank <= 4 ? ` rank-${rank}` : "";
             return `
                 <tr>
                     <td><span class="rank${rankClass}">${rank}</span></td>
                     <td class="player-name">${escapeHtml(p.name)}</td>
                     <td>${p.played}</td>
                     <td class="stat-win">${p.wins}</td>
+                    <td class="stat-draw">${p.draws}</td>
                     <td class="stat-loss">${p.losses}</td>
+                    <td class="stat-forfeit">${p.forfeits}</td>
                     <td><strong>${p.points}</strong></td>
                 </tr>`;
         }).join("");
@@ -209,7 +254,9 @@ function renderStandings() {
                         <th>Player</th>
                         <th>P</th>
                         <th>W</th>
+                        <th>D</th>
                         <th>L</th>
+                        <th>F</th>
                         <th>Pts</th>
                     </tr>
                 </thead>
@@ -274,6 +321,8 @@ function initRecordForm() {
             <option value="${p1}">${escapeHtml(league.players[p1])} wins</option>
             <option value="${p2}">${escapeHtml(league.players[p2])} wins</option>
             <option value="draw">Draw</option>
+            <option value="forfeit-${p1}">${escapeHtml(league.players[p1])} forfeits</option>
+            <option value="forfeit-${p2}">${escapeHtml(league.players[p2])} forfeits</option>
         `;
 
         validateForm();
@@ -306,11 +355,18 @@ document.getElementById("submit-result").addEventListener("click", async () => {
     const league = leagues[leagueIdx];
 
     try {
+        let winnerField;
+        if (winnerVal === "draw" || winnerVal.startsWith("forfeit-")) {
+            winnerField = winnerVal;
+        } else {
+            winnerField = parseInt(winnerVal);
+        }
+
         await db.collection("matches").add({
             leagueId: league.id,
             player1: p1,
             player2: p2,
-            winner: winnerVal === "draw" ? "draw" : parseInt(winnerVal),
+            winner: winnerField,
             date: firebase.firestore.FieldValue.serverTimestamp()
         });
 
@@ -319,6 +375,9 @@ document.getElementById("submit-result").addEventListener("click", async () => {
         let resultText;
         if (winnerVal === "draw") {
             resultText = `${p1Name} drew with ${p2Name}`;
+        } else if (winnerVal.startsWith("forfeit-")) {
+            const forfeitName = league.players[parseInt(winnerVal.split("-")[1])];
+            resultText = `${forfeitName} forfeited`;
         } else {
             const winnerName = league.players[parseInt(winnerVal)];
             resultText = `${winnerName} defeated ${winnerName === p1Name ? p2Name : p1Name}`;
@@ -372,28 +431,66 @@ function renderHistory() {
 
             const p1Name = league.players[m.player1];
             const p2Name = league.players[m.player2];
-            const date = m.date ? (m.date.toDate ? m.date.toDate() : new Date(m.date)).toLocaleDateString() : "";
+            const date = m.date ? formatDate(m.date.toDate ? m.date.toDate() : new Date(m.date)) : "";
             let result;
             if (m.winner === "draw") {
                 result = `${escapeHtml(p1Name)} <span style="color:var(--text-dim)">drew with</span> ${escapeHtml(p2Name)}`;
+            } else if (typeof m.winner === "string" && m.winner.startsWith("forfeit-")) {
+                const forfeitName = league.players[parseInt(m.winner.split("-")[1])];
+                result = `<span style="color:var(--red)">${escapeHtml(forfeitName)}</span> <span style="color:var(--text-dim)">forfeited</span>`;
             } else {
                 const winner = league.players[m.winner];
                 const loser = winner === p1Name ? p2Name : p1Name;
                 result = `<span class="history-winner">${escapeHtml(winner)}</span> <span style="color:var(--text-dim)">defeated</span> ${escapeHtml(loser)}`;
             }
 
-            const deleteBtn = isAdmin
-                ? `<button class="history-delete" data-match-id="${m.id}" title="Delete">&#10005;</button>`
+            const dateObj = m.date ? (m.date.toDate ? m.date.toDate() : new Date(m.date)) : null;
+            const isoDate = dateObj ? dateObj.toISOString().slice(0, 10) : "";
+
+            const adminBtns = isAdmin
+                ? `<input type="date" class="history-date-input hidden" data-match-id="${m.id}" value="${isoDate}">` +
+                  `<button class="history-edit" data-match-id="${m.id}" title="Edit date">&#9998;</button>` +
+                  `<button class="history-delete" data-match-id="${m.id}" title="Delete">&#10005;</button>`
                 : "";
 
             return `
                 <div class="history-item">
                     <span class="history-league">${escapeHtml(league.name)}</span>
                     <span class="history-match">${result}</span>
-                    <span class="history-date">${date}</span>
-                    ${deleteBtn}
+                    <span class="history-date" data-match-id="${m.id}">${date}</span>
+                    ${adminBtns}
                 </div>`;
         }).join("");
+
+        // Attach edit-date handlers
+        historyList.querySelectorAll(".history-edit").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const id = btn.dataset.matchId;
+                const input = historyList.querySelector(`.history-date-input[data-match-id="${id}"]`);
+                const dateSpan = historyList.querySelector(`.history-date[data-match-id="${id}"]`);
+
+                if (input.classList.contains("hidden")) {
+                    // Show date picker
+                    input.classList.remove("hidden");
+                    dateSpan.classList.add("hidden");
+                    btn.textContent = "\u2714";
+                    btn.title = "Save date";
+                } else {
+                    // Save new date
+                    const newDate = input.value;
+                    if (newDate) {
+                        const ts = firebase.firestore.Timestamp.fromDate(new Date(newDate + "T12:00:00"));
+                        db.collection("matches").doc(id).update({ date: ts }).catch(() => {
+                            alert("Error updating date. Are you signed in as an admin?");
+                        });
+                    }
+                    input.classList.add("hidden");
+                    dateSpan.classList.remove("hidden");
+                    btn.textContent = "\u270E";
+                    btn.title = "Edit date";
+                }
+            });
+        });
 
         // Attach delete handlers
         historyList.querySelectorAll(".history-delete").forEach(btn => {
@@ -413,9 +510,63 @@ function renderHistory() {
     render();
 }
 
-// --- Settings ---
+// --- Admin ---
 
-function renderSettings() {
+async function renderAdmin() {
+    renderGeneralSettings();
+    renderLeagueSettings();
+    await renderAdminList();
+}
+
+function renderGeneralSettings() {
+    const select = document.getElementById("players-per-group");
+    select.innerHTML = "";
+    for (let i = 2; i <= 10; i++) {
+        const opt = document.createElement("option");
+        opt.value = i;
+        opt.textContent = i;
+        if (i === playersPerGroup) opt.selected = true;
+        select.appendChild(opt);
+    }
+}
+
+document.getElementById("save-general").addEventListener("click", async () => {
+    const message = document.getElementById("general-message");
+    const newCount = parseInt(document.getElementById("players-per-group").value);
+
+    try {
+        await db.collection("settings").doc("general").set(
+            { playersPerGroup: newCount },
+            { merge: true }
+        );
+
+        // Adjust each league's player array to match the new count
+        const batch = db.batch();
+        leagues.forEach(league => {
+            const current = league.players.slice();
+            if (newCount > current.length) {
+                // Add placeholder players
+                for (let i = current.length; i < newCount; i++) {
+                    current.push("Player " + (i + 1));
+                }
+            } else if (newCount < current.length) {
+                current.length = newCount;
+            }
+            batch.update(db.collection("leagues").doc(league.id), { players: current });
+        });
+        await batch.commit();
+
+        message.textContent = "General settings saved!";
+        message.className = "message success";
+        setTimeout(() => message.classList.add("hidden"), 3000);
+    } catch (e) {
+        message.textContent = "Error saving settings. Are you signed in as an admin?";
+        message.className = "message error";
+        setTimeout(() => message.classList.add("hidden"), 3000);
+    }
+});
+
+function renderLeagueSettings() {
     const container = document.getElementById("settings-leagues");
     const message = document.getElementById("settings-message");
     message.classList.add("hidden");
@@ -437,6 +588,19 @@ function renderSettings() {
                 ${playerInputs}
             </div>`;
     }).join("");
+}
+
+async function renderAdminList() {
+    const container = document.getElementById("admin-list");
+    try {
+        const snapshot = await db.collection("admins").get();
+        const emails = snapshot.docs.map(doc => doc.id);
+        container.innerHTML = emails.map(email =>
+            `<div class="admin-item">${escapeHtml(email)}</div>`
+        ).join("");
+    } catch (e) {
+        container.innerHTML = '<div class="admin-item" style="color:var(--text-dim)">Unable to load admin list.</div>';
+    }
 }
 
 document.getElementById("save-settings").addEventListener("click", async () => {
@@ -487,8 +651,9 @@ document.getElementById("reset-data").addEventListener("click", async () => {
         await batch1.commit();
 
         // Reset leagues to defaults
+        const defaults = buildDefaultLeagues(playersPerGroup);
         const batch2 = db.batch();
-        DEFAULT_LEAGUES.forEach((league, i) => {
+        defaults.forEach((league, i) => {
             const ref = db.collection("leagues").doc(leagueIdFromIndex(i));
             batch2.set(ref, { name: league.name, players: league.players });
         });
@@ -505,6 +670,13 @@ document.getElementById("reset-data").addEventListener("click", async () => {
 });
 
 // --- Utilities ---
+
+function formatDate(d) {
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yyyy = d.getFullYear();
+    return dd + "/" + mm + "/" + yyyy;
+}
 
 function escapeHtml(text) {
     const div = document.createElement("div");

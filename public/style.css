@@ -78,6 +78,28 @@ nav {
     background: rgba(226, 183, 20, 0.1);
 }
 
+.admin-btn {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid transparent;
+    padding: 0.4rem 0.6rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    line-height: 1;
+    transition: all 0.2s;
+}
+
+.admin-btn:hover {
+    color: var(--accent);
+}
+
+.admin-btn.active {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: rgba(226, 183, 20, 0.1);
+}
+
 .login-btn {
     background: transparent;
     color: var(--text-dim);
@@ -179,16 +201,16 @@ main {
     font-size: 0.8rem;
 }
 
-.rank-1 { background: var(--rank-1); color: #1a1a2e; }
-.rank-2 { background: var(--rank-2); color: #1a1a2e; }
-.rank-3 { background: var(--rank-3); color: #1a1a2e; }
+.rank-1, .rank-2, .rank-3, .rank-4 { background: var(--rank-2); color: #1a1a2e; }
 
 .player-name {
     font-weight: 500;
 }
 
 .stat-win { color: var(--green); }
+.stat-draw { color: var(--text-dim); }
 .stat-loss { color: var(--red); }
+.stat-forfeit { color: var(--red); }
 
 /* Record Result */
 .record-card {
@@ -351,6 +373,32 @@ select:focus, input[type="text"]:focus {
     white-space: nowrap;
 }
 
+.history-edit {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+    margin-left: 0.5rem;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.history-edit:hover {
+    color: var(--accent);
+    background: rgba(226, 183, 20, 0.15);
+}
+
+.history-date-input {
+    padding: 0.2rem 0.4rem;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
 .history-delete {
     background: none;
     border: none;
@@ -403,6 +451,34 @@ select:focus, input[type="text"]:focus {
 
 .settings-actions .btn-primary {
     flex: 1;
+}
+
+/* Admin Panel */
+.admin-card h2 {
+    color: var(--accent);
+    margin-bottom: 1.5rem;
+}
+
+.admin-section-title {
+    color: var(--accent);
+    font-size: 1rem;
+    margin-bottom: 1rem;
+}
+
+.admin-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 2rem 0;
+}
+
+.admin-item {
+    padding: 0.5rem 0;
+    font-size: 0.9rem;
+    border-bottom: 1px solid rgba(42, 58, 92, 0.5);
+}
+
+.admin-item:last-child {
+    border-bottom: none;
 }
 
 /* Responsive */

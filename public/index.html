@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chess Club Rankings</title>
+    <title>Alehouse Hobgoblins Chess League</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header>
-        <h1>&#9822; Chess Club Rankings</h1>
+        <h1>&#9822; Alehouse Hobgoblins Chess League</h1>
         <div class="header-right">
             <nav>
                 <button class="nav-btn active" data-view="standings">Standings</button>
                 <button class="nav-btn admin-only hidden" data-view="record">Record Result</button>
                 <button class="nav-btn" data-view="history">Match History</button>
-                <button class="nav-btn admin-only hidden" data-view="settings">Settings</button>
             </nav>
+            <button id="admin-btn" class="admin-btn admin-only hidden" data-view="admin" title="Admin">&#9881;</button>
             <button id="login-btn" class="login-btn">Sign in</button>
         </div>
     </header>
@@ -70,16 +70,33 @@
             </div>
         </section>
 
-        <!-- Settings View -->
-        <section id="settings-view" class="view">
-            <div class="card">
-                <h2>League &amp; Player Settings</h2>
+        <!-- Admin View -->
+        <section id="admin-view" class="view">
+            <div class="card admin-card">
+                <h2>Admin Panel</h2>
+
+                <h3 class="admin-section-title">General Settings</h3>
+                <div class="form-group">
+                    <label for="players-per-group">Players per Group</label>
+                    <select id="players-per-group"></select>
+                </div>
+                <button id="save-general" class="btn-primary" style="margin-bottom:1.5rem">Save General Settings</button>
+                <div id="general-message" class="message hidden"></div>
+
+                <hr class="admin-divider">
+
+                <h3 class="admin-section-title">League &amp; Player Settings</h3>
                 <div id="settings-leagues"></div>
                 <div class="settings-actions">
                     <button id="save-settings" class="btn-primary">Save Changes</button>
                     <button id="reset-data" class="btn-danger">Reset All Data</button>
                 </div>
                 <div id="settings-message" class="message hidden"></div>
+
+                <hr class="admin-divider">
+
+                <h3 class="admin-section-title">Admins</h3>
+                <div id="admin-list"></div>
             </div>
         </section>
     </main>
@@ -92,12 +109,13 @@
     <!-- Firebase Config — replace with your project's config -->
     <script>
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyDMSJTVML5yhgPpOZ68WdgsNGg_zV4AGfo",
+            authDomain: "ale-house-hobgoblins.firebaseapp.com",
+            projectId: "ale-house-hobgoblins",
+            storageBucket: "ale-house-hobgoblins.firebasestorage.app",
+            messagingSenderId: "1022301961188",
+            appId: "1:1022301961188:web:b667066e459bb47aeaa5f1",
+            measurementId: "G-08KR6MGKB9"
         };
         firebase.initializeApp(firebaseConfig);
     </script>

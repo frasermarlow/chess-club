@@ -1,5 +1,15 @@
 {
   "projects": {
-    "default": "YOUR_PROJECT_ID"
-  }
+    "default": "ale-house-hobgoblins"
+  },
+  "targets": {
+    "ale-house-hobgoblins": {
+      "hosting": {
+        "main": [
+          "alehouse-hobgoblins"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
