@@ -348,6 +348,7 @@ document.getElementById("submit-result").addEventListener("click", async () => {
     const p1 = parseInt(document.getElementById("player1-select").value);
     const p2 = parseInt(document.getElementById("player2-select").value);
     const winnerVal = document.getElementById("winner-select").value;
+    const format = document.getElementById("format-select").value;
     const message = document.getElementById("result-message");
 
     if (isNaN(leagueIdx) || isNaN(p1) || isNaN(p2) || winnerVal === "") return;
@@ -367,6 +368,7 @@ document.getElementById("submit-result").addEventListener("click", async () => {
             player1: p1,
             player2: p2,
             winner: winnerField,
+            format: format,
             date: firebase.firestore.FieldValue.serverTimestamp()
         });
 
@@ -403,7 +405,7 @@ function renderHistory() {
     const filterSelect = document.getElementById("history-league-select");
     const historyList = document.getElementById("history-list");
 
-    filterSelect.innerHTML = `<option value="all">All Leagues</option>` +
+    filterSelect.innerHTML = `<option value="all">All Groups</option>` +
         leagues.map((l, i) =>
             `<option value="${l.id}">${escapeHtml(l.name)}</option>`
         ).join("");
@@ -453,10 +455,13 @@ function renderHistory() {
                   `<button class="history-delete" data-match-id="${m.id}" title="Delete">&#10005;</button>`
                 : "";
 
+            const format = m.format || "OTB";
+
             return `
                 <div class="history-item">
                     <span class="history-league">${escapeHtml(league.name)}</span>
                     <span class="history-match">${result}</span>
+                    <span class="history-format">${escapeHtml(format)}</span>
                     <span class="history-date" data-match-id="${m.id}">${date}</span>
                     ${adminBtns}
                 </div>`;
@@ -638,8 +643,40 @@ document.getElementById("save-settings").addEventListener("click", async () => {
     }
 });
 
+document.getElementById("add-group").addEventListener("click", async () => {
+    const message = document.getElementById("settings-message");
+    try {
+        // Find next available league index
+        let maxIndex = -1;
+        leagues.forEach(l => {
+            const match = l.id.match(/^league-(\d+)$/);
+            if (match) maxIndex = Math.max(maxIndex, parseInt(match[1]));
+        });
+        const newIndex = maxIndex + 1;
+        const newId = "league-" + newIndex;
+
+        const newPlayers = [];
+        for (let i = 0; i < playersPerGroup; i++) {
+            newPlayers.push("Player " + (i + 1));
+        }
+
+        await db.collection("leagues").doc(newId).set({
+            name: "Group " + (leagues.length + 1),
+            players: newPlayers
+        });
+
+        message.textContent = "New group added!";
+        message.className = "message success";
+        setTimeout(() => message.classList.add("hidden"), 3000);
+    } catch (e) {
+        message.textContent = "Error adding group. Are you signed in as an admin?";
+        message.className = "message error";
+        setTimeout(() => message.classList.add("hidden"), 3000);
+    }
+});
+
 document.getElementById("reset-data").addEventListener("click", async () => {
-    if (!confirm("This will delete ALL match history and reset player names. Are you sure?")) return;
+    if (!confirm("Are you sure you want to reset all data?")) return;
 
     const message = document.getElementById("settings-message");
 

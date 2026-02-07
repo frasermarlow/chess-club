@@ -4,19 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alehouse Hobgoblins Chess League</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=10">
 </head>
 <body>
     <header>
-        <h1>&#9822; Alehouse Hobgoblins Chess League</h1>
+        <h1>Alehouse Hobgoblins<br>Chess League</h1>
         <div class="header-right">
-            <nav>
-                <button class="nav-btn active" data-view="standings">Standings</button>
-                <button class="nav-btn admin-only hidden" data-view="record">Record Result</button>
-                <button class="nav-btn" data-view="history">Match History</button>
-            </nav>
-            <button id="admin-btn" class="admin-btn admin-only hidden" data-view="admin" title="Admin">&#9881;</button>
-            <button id="login-btn" class="login-btn">Sign in</button>
+            <img src="hobgoblin.png" alt="Hobgoblin" class="mobile-mascot" width="267" height="254">
+            <div class="header-buttons">
+                <nav>
+                    <button class="nav-btn active" data-view="standings">Standings</button>
+                    <button class="nav-btn admin-only hidden" data-view="record">Record Result</button>
+                    <button class="nav-btn" data-view="history">Match History</button>
+                </nav>
+                <button id="admin-btn" class="admin-btn admin-only hidden" data-view="admin" title="Admin">&#9881;</button>
+                <button id="login-btn" class="login-btn">Sign in</button>
+            </div>
         </div>
     </header>
 
@@ -49,6 +55,13 @@
                     <label for="winner-select">Result</label>
                     <select id="winner-select">
                         <option value="">-- Select result --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="format-select">Format</label>
+                    <select id="format-select">
+                        <option value="OTB">OTB</option>
+                        <option value="Online">Online</option>
                     </select>
                 </div>
                 <button id="submit-result" class="btn-primary" disabled>Submit Result</button>
@@ -89,6 +102,7 @@
                 <div id="settings-leagues"></div>
                 <div class="settings-actions">
                     <button id="save-settings" class="btn-primary">Save Changes</button>
+                    <button id="add-group" class="btn-primary">Add Group</button>
                     <button id="reset-data" class="btn-danger">Reset All Data</button>
                 </div>
                 <div id="settings-message" class="message hidden"></div>

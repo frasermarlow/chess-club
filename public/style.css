@@ -367,6 +367,13 @@ select:focus, input[type="text"]:focus {
     white-space: nowrap;
 }
 
+.history-format {
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    margin-right: 1rem;
+    white-space: nowrap;
+}
+
 .history-date {
     color: var(--text-dim);
     font-size: 0.8rem;
@@ -481,32 +488,57 @@ select:focus, input[type="text"]:focus {
     border-bottom: none;
 }
 
+.mobile-mascot {
+    display: none;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
     header {
         padding: 1rem;
         flex-direction: column;
-        align-items: stretch;
+        align-items: center;
+    }
+
+    header h1 {
+        text-align: center;
+        font-family: 'Blackadder ITC', 'MedievalSharp', cursive;
+    }
+
+    .mobile-mascot {
+        display: block;
+        height: 160px;
+        width: 168px;
+        flex-shrink: 0;
     }
 
     .header-right {
+        flex-direction: row;
+        align-items: center;
+        width: 100%;
+    }
+
+    .header-buttons {
+        display: flex;
         flex-direction: column;
-        align-items: stretch;
+        flex: 1;
+        gap: 0.25rem;
     }
 
     nav {
-        flex-wrap: wrap;
+        flex-direction: column;
     }
 
     .nav-btn {
-        flex: 1;
         text-align: center;
-        font-size: 0.8rem;
-        padding: 0.5rem 0.5rem;
+        font-size: 0.9rem;
+        padding: 0.5rem 0.25rem;
     }
 
     .login-btn {
         text-align: center;
+        font-size: 0.9rem;
+        padding: 0.5rem 0.25rem;
     }
 
     main {
