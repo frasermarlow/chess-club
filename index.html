@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Club Rankings</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>&#9822; Chess Club Rankings</h1>
+        <nav>
+            <button class="nav-btn active" data-view="standings">Standings</button>
+            <button class="nav-btn" data-view="record">Record Result</button>
+            <button class="nav-btn" data-view="history">Match History</button>
+            <button class="nav-btn" data-view="settings">Settings</button>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Standings View -->
+        <section id="standings-view" class="view active">
+            <div class="leagues-grid" id="leagues-grid"></div>
+        </section>
+
+        <!-- Record Result View -->
+        <section id="record-view" class="view">
+            <div class="card record-card">
+                <h2>Record Match Result</h2>
+                <div class="form-group">
+                    <label for="league-select">League</label>
+                    <select id="league-select"></select>
+                </div>
+                <div class="match-players">
+                    <div class="form-group">
+                        <label for="player1-select">White</label>
+                        <select id="player1-select"></select>
+                    </div>
+                    <div class="vs">vs</div>
+                    <div class="form-group">
+                        <label for="player2-select">Black</label>
+                        <select id="player2-select"></select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="winner-select">Result</label>
+                    <select id="winner-select">
+                        <option value="">-- Select result --</option>
+                    </select>
+                </div>
+                <button id="submit-result" class="btn-primary" disabled>Submit Result</button>
+                <div id="result-message" class="message hidden"></div>
+            </div>
+        </section>
+
+        <!-- History View -->
+        <section id="history-view" class="view">
+            <div class="card">
+                <h2>Match History</h2>
+                <div class="form-group">
+                    <label for="history-league-select">Filter by League</label>
+                    <select id="history-league-select">
+                        <option value="all">All Leagues</option>
+                    </select>
+                </div>
+                <div id="history-list" class="history-list"></div>
+            </div>
+        </section>
+
+        <!-- Settings View -->
+        <section id="settings-view" class="view">
+            <div class="card">
+                <h2>League &amp; Player Settings</h2>
+                <div id="settings-leagues"></div>
+                <div class="settings-actions">
+                    <button id="save-settings" class="btn-primary">Save Changes</button>
+                    <button id="reset-data" class="btn-danger">Reset All Data</button>
+                </div>
+                <div id="settings-message" class="message hidden"></div>
+            </div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
