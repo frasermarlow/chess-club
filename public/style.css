@@ -44,6 +44,13 @@ header h1 {
     white-space: nowrap;
 }
 
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
 nav {
     display: flex;
     gap: 0.25rem;
@@ -69,6 +76,23 @@ nav {
     color: var(--accent);
     border-color: var(--accent);
     background: rgba(226, 183, 20, 0.1);
+}
+
+.login-btn {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    padding: 0.4rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.login-btn:hover {
+    color: var(--text);
+    border-color: var(--text-dim);
 }
 
 main {
@@ -389,6 +413,11 @@ select:focus, input[type="text"]:focus {
         align-items: stretch;
     }
 
+    .header-right {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
     nav {
         flex-wrap: wrap;
     }
@@ -398,6 +427,10 @@ select:focus, input[type="text"]:focus {
         text-align: center;
         font-size: 0.8rem;
         padding: 0.5rem 0.5rem;
+    }
+
+    .login-btn {
+        text-align: center;
     }
 
     main {

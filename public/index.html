@@ -9,12 +9,15 @@
 <body>
     <header>
         <h1>&#9822; Chess Club Rankings</h1>
-        <nav>
-            <button class="nav-btn active" data-view="standings">Standings</button>
-            <button class="nav-btn" data-view="record">Record Result</button>
-            <button class="nav-btn" data-view="history">Match History</button>
-            <button class="nav-btn" data-view="settings">Settings</button>
-        </nav>
+        <div class="header-right">
+            <nav>
+                <button class="nav-btn active" data-view="standings">Standings</button>
+                <button class="nav-btn admin-only hidden" data-view="record">Record Result</button>
+                <button class="nav-btn" data-view="history">Match History</button>
+                <button class="nav-btn admin-only hidden" data-view="settings">Settings</button>
+            </nav>
+            <button id="login-btn" class="login-btn">Sign in</button>
+        </div>
     </header>
 
     <main>
@@ -80,6 +83,24 @@
             </div>
         </section>
     </main>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+    <!-- Firebase Config — replace with your project's config -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        firebase.initializeApp(firebaseConfig);
+    </script>
 
     <script src="app.js"></script>
 </body>
